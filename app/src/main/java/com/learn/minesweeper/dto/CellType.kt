@@ -1,4 +1,4 @@
-package com.learn.minesweeper
+package com.learn.minesweeper.dto
 
 enum class CellType {
     EMPTY,
