@@ -99,30 +99,78 @@ class MainActivity : AppCompatActivity() {
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
                 val param = LinearLayout.LayoutParams(0, (height / (difficultyLevel.boardSize) - 50), 1F)
                 cell.layoutParams = param
-
+                cell.tag = Pair(i,j)
                 cell.setOnClickListener {
-                        when (cell.content.type) {
-                            CellType.MINE -> {
-                                // Open up all cells and Game over
-                                Log.d ("TAG", " mine")
-
-                            }
-                            CellType.EMPTY -> {
-                                // Open up all empty neighbor cells
-                                Log.d ("TAG", " empty")
-                            }
-                            CellType.NUMBER -> {
-                                // Open up and show count
-                                Log.d ("TAG", " ${(element as Number).count}")
-                                cell.text = (element as Number).count.toString()
-                                cell.content.isOpen = true
-                                cell.isSelected = true
-                            }
-                        }
+                    onSelectCell(cell, element)
                 }
                 row.addView(cell)
             }
             board.addView(row)
+        }
+    }
+
+    private fun openAllEmptyCells(i: Int, j: Int) {
+        if (i >= 0 && i < difficultyLevel.boardSize &&  j >= 0 &&
+            j < difficultyLevel.boardSize && contentList[i][j].type == CellType.EMPTY &&
+            !contentList[i][j].isOpen) {
+            contentList[i][j].isOpen = true
+
+            openAllEmptyCells(i-1, j-1)
+            openAllEmptyCells(i-1, j)
+            openAllEmptyCells(i-1, j+1)
+
+            openAllEmptyCells(i, j-1)
+            openAllEmptyCells(i, j+1)
+            openAllEmptyCells(i+1, j-1)
+
+            openAllEmptyCells(i+1, j)
+            openAllEmptyCells(i+1, j+1)
+        } else {
+            return
+        }
+    }
+    private fun onSelectCell(
+        cell: Cell,
+        element: Content
+    ) {
+        val tagPair = cell.tag as Pair<Int, Int>
+        when (cell.content.type) {
+            CellType.MINE -> {
+                // Open up all cells and Game over
+                Log.d("TAG", " mine")
+                for (i in 0 until difficultyLevel.boardSize) {
+                    for (j in 0 until difficultyLevel.boardSize) {
+                        contentList[i][j].isOpen = true
+                    }
+                }
+            }
+            CellType.EMPTY -> {
+                // Open up all empty neighbor cells
+                Log.d("TAG", " empty tag ${tagPair.first}  ${tagPair.second}")
+                openAllEmptyCells(tagPair.first, tagPair.second)
+            }
+            CellType.NUMBER -> {
+                // Open up and show count
+                contentList[tagPair.first][tagPair.second].isOpen = true
+            }
+        }
+
+        for ((i, list) in contentList.withIndex()) {
+            for ((j, element) in list.withIndex()) {
+                val iteratingCell = (board.getChildAt(i) as LinearLayout).getChildAt(j) as Cell
+
+                if (contentList[i][j].isOpen) {
+                    when (contentList[i][j].type) {
+                        CellType.NUMBER ->  iteratingCell.text = (element as Number).count.toString()
+                        CellType.MINE -> {
+                            iteratingCell.background = ContextCompat.getDrawable(this, R.drawable.bomb)
+                        }
+                    }
+                    iteratingCell.content.isOpen = true
+                    iteratingCell.isSelected = true
+                    iteratingCell.isClickable = false
+                }
+            }
         }
     }
 
