@@ -2,6 +2,7 @@ package com.learn.minesweeper
 
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.Gravity
 import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -48,8 +49,6 @@ class MainActivity : AppCompatActivity() {
                }
            }
         }
-
-        println(contentList)
     }
 
     private fun isMine(i: Int, j: Int) = if (i >= 0 && i < difficultyLevel.boardSize &&  j >= 0 &&
@@ -94,24 +93,34 @@ class MainActivity : AppCompatActivity() {
             row.weightSum = difficultyLevel.boardSize.toFloat()
             for ((j, element) in list.withIndex()) {
                 val cell = Cell(this, element)
+                cell.textSize = 30F
+                cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
+                cell.gravity = Gravity.CENTER
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
                 val param = LinearLayout.LayoutParams(0, (height / (difficultyLevel.boardSize) - 50), 1F)
                 cell.layoutParams = param
-                row.addView(cell)
+
                 cell.setOnClickListener {
                         when (cell.content.type) {
                             CellType.MINE -> {
                                 // Open up all cells and Game over
+                                Log.d ("TAG", " mine")
 
                             }
                             CellType.EMPTY -> {
                                 // Open up all empty neighbor cells
+                                Log.d ("TAG", " empty")
                             }
                             CellType.NUMBER -> {
                                 // Open up and show count
+                                Log.d ("TAG", " ${(element as Number).count}")
+                                cell.text = (element as Number).count.toString()
+                                cell.content.isOpen = true
+                                cell.isSelected = true
                             }
                         }
                 }
+                row.addView(cell)
             }
             board.addView(row)
         }
