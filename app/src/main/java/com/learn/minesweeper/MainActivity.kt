@@ -2,106 +2,91 @@ package com.learn.minesweeper
 
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Gravity
+import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.LinearLayout
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.learn.minesweeper.dto.*
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
+import com.learn.minesweeper.dto.CellType
+import com.learn.minesweeper.dto.Content
 import com.learn.minesweeper.dto.Number
-import com.learn.minesweeper.level.Difficulty
+import com.learn.minesweeper.level.Level
 import kotlinx.android.synthetic.main.activity_main.*
-import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
-
-    private var difficultyLevel: Difficulty = Difficulty.DIFFICULT
-    private lateinit var contentList: ArrayList<ArrayList<Content>>
+    private lateinit var mGameViewModel: GameViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initBoardContentList()
-        generateMines()
-        calculateNeighborMineCount()
-        addCells()
-    }
+        mGameViewModel = ViewModelProviders.of(this).get(GameViewModel::class.java)
 
-    private fun calculateNeighborMineCount() {
-        for ((i, list) in contentList.withIndex()) {
-           for ((j, element) in list.withIndex()) {
-               var mineCount = 0
-
-               if (element.type != CellType.MINE) {
-                   if (isMine(i-1, j-1)) mineCount++
-                   if (isMine(i-1, j)) mineCount++
-                   if (isMine(i-1, j+1)) mineCount++
-                   if (isMine(i, j-1)) mineCount++
-                   if (isMine(i, j+1)) mineCount++
-                   if (isMine(i+1, j-1)) mineCount++
-                   if (isMine(i+1, j)) mineCount++
-                   if (isMine(i+1, j+1)) mineCount++
-                   if (mineCount > 0) {
-                       list[j] =  Number(mineCount)
-                   }
-               }
-           }
+        val spinner: Spinner = findViewById(R.id.game_level_selector)
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter.createFromResource(
+            this,
+            R.array.game_level,
+            android.R.layout.simple_spinner_item
+        ).also { adapter ->
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            // Apply the adapter to the spinner
+            spinner.adapter = adapter
         }
-    }
+        spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+            }
 
-    private fun isMine(i: Int, j: Int) = if (i >= 0 && i < difficultyLevel.boardSize &&  j >= 0 &&
-        j < difficultyLevel.boardSize) contentList[i][j].type == CellType.MINE else false
-
-    private fun generateMines() {
-        val mineCount = difficultyLevel.mineCount
-        val boardSize = difficultyLevel.boardSize
-
-        for (i in 0 until mineCount) {
-            var rowIndex = Random.nextInt(0, boardSize)
-            var columnIndex = Random.nextInt(0, boardSize)
-
-            val row = contentList[rowIndex]
-            if (row[columnIndex].type == CellType.MINE) {
-                i.dec()
-            } else {
-                row[columnIndex] = Mine()
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                when (position) {
+                    0 -> mGameViewModel.setBoardSize(Level.EASY)
+                    1 -> mGameViewModel.setBoardSize(Level.MEDIUM)
+                    2 -> mGameViewModel.setBoardSize(Level.DIFFICULT)
+                }
             }
         }
-    }
 
-    private fun initBoardContentList() {
-        val boardSize = difficultyLevel.boardSize
-        contentList = arrayListOf()
-
-        for (i in 0 until boardSize) {
-            val list = arrayListOf<Content>()
-            for (j in 0 until boardSize)
-                list.add(Empty())
-            contentList.add(list)
-        }
+        mGameViewModel.getGameLevel().observe(this, Observer<Level> {
+            mGameViewModel.reset()
+            mGameViewModel.initBoardContents()
+            board.removeAllViews()
+            addCells()
+        })
+        mGameViewModel.initBoardContents()
+        addCells()
     }
 
     private fun addCells() {
         val height: Int = getScreenHeight()
 
-        for ((i, list) in contentList.withIndex()) {
+        for ((i, list) in mGameViewModel.getContentList().withIndex()) {
             val row = LinearLayout(this)
             row.gravity = Gravity.CENTER_HORIZONTAL
             row.orientation = LinearLayout.HORIZONTAL
-            row.weightSum = difficultyLevel.boardSize.toFloat()
+            row.weightSum = mGameViewModel.getBoardSize().toFloat()
             for ((j, element) in list.withIndex()) {
-                val cell = Cell(this, element)
+                val cell = Cell(this)
                 cell.textSize = 30F
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
                 cell.gravity = Gravity.CENTER
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
-                val param = LinearLayout.LayoutParams(0, (height / (difficultyLevel.boardSize) - 50), 1F)
+                val param = LinearLayout.LayoutParams(0, (height / (mGameViewModel.getBoardSize()) - 50), 1F)
                 cell.layoutParams = param
                 cell.tag = Pair(i,j)
                 cell.setOnClickListener {
-                    onSelectCell(cell, element)
+                    onSelectCell(cell)
                 }
                 row.addView(cell)
             }
@@ -109,64 +94,26 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun openAllEmptyCells(i: Int, j: Int) {
-        if (i >= 0 && i < difficultyLevel.boardSize &&  j >= 0 &&
-            j < difficultyLevel.boardSize && contentList[i][j].type == CellType.EMPTY &&
-            !contentList[i][j].isOpen) {
-            contentList[i][j].isOpen = true
-
-            openAllEmptyCells(i-1, j-1)
-            openAllEmptyCells(i-1, j)
-            openAllEmptyCells(i-1, j+1)
-
-            openAllEmptyCells(i, j-1)
-            openAllEmptyCells(i, j+1)
-            openAllEmptyCells(i+1, j-1)
-
-            openAllEmptyCells(i+1, j)
-            openAllEmptyCells(i+1, j+1)
-        } else {
-            return
-        }
-    }
-    private fun onSelectCell(
-        cell: Cell,
-        element: Content
-    ) {
+    private fun onSelectCell(cell: Cell) {
         val tagPair = cell.tag as Pair<Int, Int>
-        when (cell.content.type) {
-            CellType.MINE -> {
-                // Open up all cells and Game over
-                Log.d("TAG", " mine")
-                for (i in 0 until difficultyLevel.boardSize) {
-                    for (j in 0 until difficultyLevel.boardSize) {
-                        contentList[i][j].isOpen = true
-                    }
-                }
-            }
-            CellType.EMPTY -> {
-                // Open up all empty neighbor cells
-                Log.d("TAG", " empty tag ${tagPair.first}  ${tagPair.second}")
-                openAllEmptyCells(tagPair.first, tagPair.second)
-            }
-            CellType.NUMBER -> {
-                // Open up and show count
-                contentList[tagPair.first][tagPair.second].isOpen = true
-            }
-        }
+        mGameViewModel.open(tagPair)
 
-        for ((i, list) in contentList.withIndex()) {
+        showSelectedCells()
+    }
+
+    private fun showSelectedCells() {
+        for ((i, list) in mGameViewModel.getContentList().withIndex()) {
             for ((j, element) in list.withIndex()) {
                 val iteratingCell = (board.getChildAt(i) as LinearLayout).getChildAt(j) as Cell
 
-                if (contentList[i][j].isOpen) {
-                    when (contentList[i][j].type) {
-                        CellType.NUMBER ->  iteratingCell.text = (element as Number).count.toString()
+                if (mGameViewModel.getContentList()[i][j].isOpen) {
+                    when (mGameViewModel.getContentList()[i][j].type) {
+                        CellType.NUMBER -> iteratingCell.text = (element as Number).count.toString()
                         CellType.MINE -> {
-                            iteratingCell.background = ContextCompat.getDrawable(this, R.drawable.bomb)
+                            iteratingCell.background =
+                                ContextCompat.getDrawable(this, R.drawable.bomb)
                         }
                     }
-                    iteratingCell.content.isOpen = true
                     iteratingCell.isSelected = true
                     iteratingCell.isClickable = false
                 }
@@ -177,6 +124,13 @@ class MainActivity : AppCompatActivity() {
     private fun getScreenHeight(): Int {
         val displayMetrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(displayMetrics)
+
         return displayMetrics.heightPixels
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        mGameViewModel.reset()
     }
 }
