@@ -1,15 +1,18 @@
 package com.learn.minesweeper.dto
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.learn.minesweeper.level.Level
 import kotlin.random.Random
 
 class Board {
-    private lateinit var mBoard: ArrayList<ArrayList<Content>>
-    private var boardSize = Level.EASY.boardSize
-    private var mineCount = Level.EASY.mineCount
+    private lateinit var mCells: ArrayList<ArrayList<Cell>>
+    private var mBoardSize = Level.EASY.boardSize
+    private var mMineCount = Level.EASY.mineCount
+    private var mGameOver: MutableLiveData<Boolean> = MutableLiveData(false)
 
     private fun calculateNeighborMineCount() {
-        for ((i, list) in mBoard.withIndex()) {
+        for ((i, list) in mCells.withIndex()) {
             for ((j, element) in list.withIndex()) {
                 var mineCount = 0
 
@@ -30,18 +33,17 @@ class Board {
         }
     }
 
-    private fun isMine(i: Int, j: Int) = if (i >= 0 && i < boardSize &&  j >= 0 &&
-        j < boardSize) mBoard[i][j].type == CellType.MINE else false
+    private fun isMine(i: Int, j: Int) = if (i in 0 until mBoardSize && j in 0 until mBoardSize) mCells[i][j].type == CellType.MINE else false
 
     private fun generateMines() {
-        val mineCount = mineCount
-        val boardSize = boardSize
+        val mineCount = mMineCount
+        val boardSize = mBoardSize
 
         for (i in 0 until mineCount) {
             var rowIndex = Random.nextInt(0, boardSize)
             var columnIndex = Random.nextInt(0, boardSize)
 
-            val row = mBoard[rowIndex]
+            val row = mCells[rowIndex]
             if (row[columnIndex].type == CellType.MINE) {
                 i.dec()
             } else {
@@ -51,29 +53,27 @@ class Board {
     }
 
     private fun initBoardContentList() {
-        val boardSize = boardSize
-        mBoard = arrayListOf()
+        val boardSize = mBoardSize
+        mCells = arrayListOf()
 
         for (i in 0 until boardSize) {
-            val list = arrayListOf<Content>()
+            val list = arrayListOf<Cell>()
             for (j in 0 until boardSize)
                 list.add(Empty())
-            mBoard.add(list)
+            mCells.add(list)
         }
     }
 
     private fun openAllCells() {
-        for (i in 0 until boardSize) {
-            for (j in 0 until boardSize) {
+        for (i in 0 until mBoardSize) {
+            for (j in 0 until mBoardSize) {
                 openACell(i, j)
             }
         }
     }
 
     private fun openAllEmptyCells(i: Int, j: Int) {
-        if (i >= 0 && i < boardSize &&  j >= 0 &&
-            j < boardSize && mBoard[i][j].type == CellType.EMPTY &&
-            !mBoard[i][j].isOpen) {
+        if (i in 0 until mBoardSize && j in 0 until mBoardSize && mCells[i][j].type == CellType.EMPTY && !mCells[i][j].isOpen) {
             openACell(i, j)
 
             openAllEmptyCells(i-1, j-1)
@@ -92,15 +92,16 @@ class Board {
     }
 
     private fun openACell(i: Int, j: Int) {
-        mBoard[i][j].isOpen = true
+        mCells[i][j].isOpen = true
     }
 
     internal fun open(position: Pair<Int, Int>) {
-        var element = mBoard[position.first][position.second]
+        var element = mCells[position.first][position.second]
         when (element.type) {
             CellType.MINE -> {
                 // Open up all cells and Show Game over
                 openAllCells()
+                mGameOver.value = true
             }
             CellType.EMPTY -> {
                 // Open up all empty neighbor cells
@@ -113,24 +114,21 @@ class Board {
         }
     }
 
-    internal fun reset() {
-        mBoard?.clear()
-    }
-
-
     internal fun setBoardSize(size: Int) {
-        boardSize = size
+        mBoardSize = size
     }
 
     internal fun setMineCount(count: Int) {
-        mineCount = count
+        mMineCount = count
     }
 
-    internal fun getBoard() = mBoard
+    internal fun getCells() = mCells
 
     internal fun initBoardContents() {
         initBoardContentList()
         generateMines()
         calculateNeighborMineCount()
     }
+
+    internal fun isGameOver(): LiveData<Boolean> = mGameOver
 }

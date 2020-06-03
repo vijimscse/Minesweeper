@@ -62,18 +62,24 @@ class MainActivity : AppCompatActivity() {
             board.removeAllViews()
             addCells()
         })
+
+        mGameViewModel.getBoard().isGameOver().observe(this, Observer<Boolean> {
+            if (it) {
+
+            }
+        })
     }
 
     private fun addCells() {
         val height: Int = getScreenHeight()
 
-        for ((i, list) in mGameViewModel.getBoard().withIndex()) {
+        for ((i, list) in mGameViewModel.getBoard().getCells().withIndex()) {
             val row = LinearLayout(this)
             row.gravity = Gravity.CENTER_HORIZONTAL
             row.orientation = LinearLayout.HORIZONTAL
             row.weightSum = mGameViewModel.getBoardSize().toFloat()
             for (j in list.indices) {
-                val cell = Cell(this)
+                val cell = CellView(this)
                 cell.textSize = 30F
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
                 cell.gravity = Gravity.CENTER
@@ -90,19 +96,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onSelectCell(cell: Cell) {
-        mGameViewModel.open(cell.tag as Pair<Int, Int>)
+    private fun onSelectCell(cellView: CellView) {
+        mGameViewModel.open(cellView.tag as Pair<Int, Int>)
 
         showSelectedCells()
     }
 
     private fun showSelectedCells() {
-        for ((i, list) in mGameViewModel.getBoard().withIndex()) {
+        for ((i, list) in mGameViewModel.getBoard().getCells().withIndex()) {
             for ((j, element) in list.withIndex()) {
-                val iteratingCell = (board.getChildAt(i) as LinearLayout).getChildAt(j) as Cell
+                val iteratingCell = (board.getChildAt(i) as LinearLayout).getChildAt(j) as CellView
 
-                if (mGameViewModel.getBoard()[i][j].isOpen) {
-                    when (mGameViewModel.getBoard()[i][j].type) {
+                if (mGameViewModel.getBoard().getCells()[i][j].isOpen) {
+                    when (mGameViewModel.getBoard().getCells()[i][j].type) {
                         CellType.NUMBER -> iteratingCell.text = (element as Number).count.toString()
                         CellType.MINE -> {
                             iteratingCell.background =

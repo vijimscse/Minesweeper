@@ -1,4 +1,4 @@
 package com.learn.minesweeper.dto
 
-class Mine: Content(type = CellType.MINE) {
+class Mine: Cell(type = CellType.MINE) {
 }
