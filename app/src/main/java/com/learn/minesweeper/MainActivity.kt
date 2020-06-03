@@ -4,10 +4,7 @@ import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.LinearLayout
-import android.widget.Spinner
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
@@ -15,6 +12,8 @@ import androidx.lifecycle.ViewModelProviders
 import com.learn.minesweeper.dto.CellType
 import com.learn.minesweeper.dto.Number
 import com.learn.minesweeper.level.Level
+import com.learn.minesweeper.utils.GameOverDialog
+import com.learn.minesweeper.utils.ScreenUtils.getScreenHeight
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -65,14 +64,18 @@ class MainActivity : AppCompatActivity() {
 
         mGameViewModel.getBoard().isGameOver().observe(this, Observer<Boolean> {
             if (it) {
-
+                //Toast.makeText(this, R.string.game_over, Toast.LENGTH_SHORT).show()
+                val gameOverDialog = GameOverDialog {
+                    mGameViewModel.initBoardContents()
+                    board.removeAllViews()
+                    addCells()
+                }
+                gameOverDialog.show(supportFragmentManager, getString(R.string.game_over))
             }
         })
     }
 
     private fun addCells() {
-        val height: Int = getScreenHeight()
-
         for ((i, list) in mGameViewModel.getBoard().getCells().withIndex()) {
             val row = LinearLayout(this)
             row.gravity = Gravity.CENTER_HORIZONTAL
@@ -84,7 +87,7 @@ class MainActivity : AppCompatActivity() {
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
                 cell.gravity = Gravity.CENTER
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
-                val param = LinearLayout.LayoutParams(0, (height / (mGameViewModel.getBoardSize()) - 50), 1F)
+                val param = LinearLayout.LayoutParams(0, (getScreenHeight() / (mGameViewModel.getBoardSize()) - 50), 1F)
                 cell.layoutParams = param
                 cell.tag = Pair(i,j)
                 cell.setOnClickListener {
@@ -120,12 +123,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    private fun getScreenHeight(): Int {
-        val displayMetrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(displayMetrics)
-
-        return displayMetrics.heightPixels
     }
 }

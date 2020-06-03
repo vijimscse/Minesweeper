@@ -1,6 +1,6 @@
 package com.learn.minesweeper.utils
 
-import android.util.DisplayMetrics
+import android.content.res.Resources
 
 object ScreenUtils {
 //    private fun getScreenHeight(): Int {
@@ -9,4 +9,8 @@ object ScreenUtils {
 //
 //        return displayMetrics.heightPixels
 //    }
+
+    fun getScreenHeight(): Int {
+        return Resources.getSystem().displayMetrics.heightPixels
+    }
 }
