@@ -13,7 +13,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import com.learn.minesweeper.dto.CellType
-import com.learn.minesweeper.dto.Content
 import com.learn.minesweeper.dto.Number
 import com.learn.minesweeper.level.Level
 import kotlinx.android.synthetic.main.activity_main.*
@@ -59,24 +58,21 @@ class MainActivity : AppCompatActivity() {
         }
 
         mGameViewModel.getGameLevel().observe(this, Observer<Level> {
-            mGameViewModel.reset()
             mGameViewModel.initBoardContents()
             board.removeAllViews()
             addCells()
         })
-        mGameViewModel.initBoardContents()
-        addCells()
     }
 
     private fun addCells() {
         val height: Int = getScreenHeight()
 
-        for ((i, list) in mGameViewModel.getContentList().withIndex()) {
+        for ((i, list) in mGameViewModel.getBoard().withIndex()) {
             val row = LinearLayout(this)
             row.gravity = Gravity.CENTER_HORIZONTAL
             row.orientation = LinearLayout.HORIZONTAL
             row.weightSum = mGameViewModel.getBoardSize().toFloat()
-            for ((j, element) in list.withIndex()) {
+            for (j in list.indices) {
                 val cell = Cell(this)
                 cell.textSize = 30F
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
@@ -95,19 +91,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onSelectCell(cell: Cell) {
-        val tagPair = cell.tag as Pair<Int, Int>
-        mGameViewModel.open(tagPair)
+        mGameViewModel.open(cell.tag as Pair<Int, Int>)
 
         showSelectedCells()
     }
 
     private fun showSelectedCells() {
-        for ((i, list) in mGameViewModel.getContentList().withIndex()) {
+        for ((i, list) in mGameViewModel.getBoard().withIndex()) {
             for ((j, element) in list.withIndex()) {
                 val iteratingCell = (board.getChildAt(i) as LinearLayout).getChildAt(j) as Cell
 
-                if (mGameViewModel.getContentList()[i][j].isOpen) {
-                    when (mGameViewModel.getContentList()[i][j].type) {
+                if (mGameViewModel.getBoard()[i][j].isOpen) {
+                    when (mGameViewModel.getBoard()[i][j].type) {
                         CellType.NUMBER -> iteratingCell.text = (element as Number).count.toString()
                         CellType.MINE -> {
                             iteratingCell.background =
@@ -126,11 +121,5 @@ class MainActivity : AppCompatActivity() {
         windowManager.defaultDisplay.getMetrics(displayMetrics)
 
         return displayMetrics.heightPixels
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        mGameViewModel.reset()
     }
 }
