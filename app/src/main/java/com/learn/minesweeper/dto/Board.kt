@@ -2,7 +2,6 @@ package com.learn.minesweeper.dto
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.learn.minesweeper.level.Level
 import kotlin.random.Random
 
 class Board {

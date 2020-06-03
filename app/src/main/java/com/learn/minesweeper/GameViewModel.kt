@@ -4,7 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.learn.minesweeper.dto.Board
-import com.learn.minesweeper.level.Level
+import com.learn.minesweeper.dto.Level
 
 class GameViewModel : ViewModel() {
     private var mLevel: MutableLiveData<Level> = MutableLiveData(Level.EASY)

@@ -1,17 +1,17 @@
 package com.learn.minesweeper
 
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.Gravity
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import com.learn.minesweeper.dto.CellType
 import com.learn.minesweeper.dto.Number
-import com.learn.minesweeper.level.Level
+import com.learn.minesweeper.dto.Level
 import com.learn.minesweeper.utils.GameOverDialog
 import com.learn.minesweeper.utils.ScreenUtils.getScreenHeight
 import kotlinx.android.synthetic.main.activity_main.*
@@ -24,7 +24,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mGameViewModel = ViewModelProviders.of(this).get(GameViewModel::class.java)
+        mGameViewModel = ViewModelProvider(this).get(GameViewModel::class.java)
 
         val spinner: Spinner = findViewById(R.id.game_level_selector)
         // Create an ArrayAdapter using the string array and a default spinner layout
@@ -38,6 +38,7 @@ class MainActivity : AppCompatActivity() {
             // Apply the adapter to the spinner
             spinner.adapter = adapter
         }
+        if (savedInstanceState == null)
         spinner.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
             }
@@ -60,6 +61,7 @@ class MainActivity : AppCompatActivity() {
             mGameViewModel.initBoardContents()
             board.removeAllViews()
             addCells()
+            showSelectedCells()
         })
 
         mGameViewModel.getBoard().isGameOver().observe(this, Observer<Boolean> {

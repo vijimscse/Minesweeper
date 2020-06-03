@@ -15,11 +15,11 @@ class GameOverDialog(var replayCallback: () -> Unit ): DialogFragment() {
             val builder = AlertDialog.Builder(it)
             builder.setMessage(R.string.game_over)
                 .setPositiveButton(R.string.replay
-                ) { dialog, id ->
+                ) { _, _ ->
                     replayCallback()
                 }
                 .setNeutralButton(R.string.ok
-                ) { dialog, id ->
+                ) { _, _ ->
                     // User cancelled the dialog
                 }
             // Create the AlertDialog object and return it
