@@ -107,13 +107,21 @@ class Board {
             CellType.EMPTY -> {
                 // Open up all empty neighbor cells
                 openAllEmptyCells(position.first, position.second)
-                mGameWon.value = checkForWinCase()
+                val won = checkForWinCase()
+                if (won) {
+                    openAllCells()
+                }
+                mGameWon.value = won
                 mGameOver.value = false
             }
             CellType.NUMBER -> {
                 // Open up and show count
                 openACell(position.first, position.second)
-                mGameWon.value = checkForWinCase()
+                val won = checkForWinCase()
+                if (won) {
+                    openAllCells()
+                }
+                mGameWon.value = won
                 mGameOver.value = false
             }
         }

@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
                 cell.gravity = Gravity.CENTER
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
-                val param = LinearLayout.LayoutParams(0, (board.height / (mGameViewModel.getBoardSize()) - 50), 1F)
+                val param = LinearLayout.LayoutParams(0, (board.height / (mGameViewModel.getBoardSize())), 1F)
                 cell.layoutParams = param
                 cell.tag = Pair(i,j)
                 cell.setOnClickListener {
