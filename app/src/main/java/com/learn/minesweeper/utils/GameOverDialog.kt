@@ -12,7 +12,10 @@ class GameOverDialog(var replayCallback: () -> Unit ): DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         return activity?.let {
             // Use the Builder class for convenient dialog construction
+
+
             val builder = AlertDialog.Builder(it)
+//            builder.setView(R.layout.dialog_content)
             builder.setMessage(R.string.game_over)
                 .setPositiveButton(R.string.replay
                 ) { _, _ ->
@@ -22,8 +25,10 @@ class GameOverDialog(var replayCallback: () -> Unit ): DialogFragment() {
                 ) { _, _ ->
                     // User cancelled the dialog
                 }
-            // Create the AlertDialog object and return it
-            builder.create()
+//            // Create the AlertDialog object and return it
+//            val dialog = bui.create()
+//            dialog.setContentView(R.layout.dialog_content)
+            return builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
     }
 }

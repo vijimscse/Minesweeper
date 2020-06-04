@@ -9,6 +9,7 @@ class Board {
     private var mBoardSize = Level.EASY.boardSize
     private var mMineCount = Level.EASY.mineCount
     private var mGameOver: MutableLiveData<Boolean> = MutableLiveData(false)
+    private var mGameWon: MutableLiveData<Boolean> = MutableLiveData(false)
 
     private fun calculateNeighborMineCount() {
         for ((i, list) in mCells.withIndex()) {
@@ -101,16 +102,36 @@ class Board {
                 // Open up all cells and Show Game over
                 openAllCells()
                 mGameOver.value = true
+                mGameWon.value = false
             }
             CellType.EMPTY -> {
                 // Open up all empty neighbor cells
                 openAllEmptyCells(position.first, position.second)
+                mGameWon.value = checkForWinCase()
+                mGameOver.value = false
             }
             CellType.NUMBER -> {
                 // Open up and show count
                 openACell(position.first, position.second)
+                mGameWon.value = checkForWinCase()
+                mGameOver.value = false
             }
         }
+    }
+
+    private fun checkForWinCase(): Boolean {
+        var won = true
+        first@ for (i in 0 until mBoardSize) {
+            for (j in 0 until mBoardSize) {
+                if (!mCells[i][j].isOpen && (mCells[i][j].type == CellType.EMPTY ||
+                            mCells[i][j].type == CellType.NUMBER)) {
+                    won = false
+                    break@first
+                }
+            }
+        }
+
+        return won
     }
 
     internal fun setBoardSize(size: Int) {
@@ -130,4 +151,6 @@ class Board {
     }
 
     internal fun isGameOver(): LiveData<Boolean> = mGameOver
+
+    internal fun won(): LiveData<Boolean> = mGameWon
 }

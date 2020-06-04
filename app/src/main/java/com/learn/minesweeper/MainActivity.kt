@@ -1,19 +1,21 @@
 package com.learn.minesweeper
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
-import android.view.Gravity
-import android.view.View
-import android.widget.*
+import android.view.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.Spinner
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import com.learn.minesweeper.dto.CellType
-import com.learn.minesweeper.dto.Number
 import com.learn.minesweeper.dto.Level
-import com.learn.minesweeper.utils.GameOverDialog
-import com.learn.minesweeper.utils.ScreenUtils.getScreenHeight
+import com.learn.minesweeper.dto.Number
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -57,24 +59,65 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        mGameViewModel.getGameLevel().observe(this, Observer<Level> {
+        mGameViewModel.getGameLevel().observe(this, Observer {
             mGameViewModel.initBoardContents()
             board.removeAllViews()
             addCells()
-            showSelectedCells()
         })
 
-        mGameViewModel.getBoard().isGameOver().observe(this, Observer<Boolean> {
+        mGameViewModel.getBoard().isGameOver().observe(this, Observer {
             if (it) {
-                //Toast.makeText(this, R.string.game_over, Toast.LENGTH_SHORT).show()
-                val gameOverDialog = GameOverDialog {
+                showGameResult(getString(R.string.game_over_message)){
                     mGameViewModel.initBoardContents()
                     board.removeAllViews()
                     addCells()
                 }
-                gameOverDialog.show(supportFragmentManager, getString(R.string.game_over))
             }
         })
+
+        mGameViewModel.getBoard().won().observe(this, Observer{
+            if (it) {
+                showGameResult(getString(R.string.game_won_message)){
+                    mGameViewModel.initBoardContents()
+                    board.removeAllViews()
+                    addCells()
+                }
+            }
+        })
+    }
+
+    private fun showGameResult(message: String, replayCallback: () -> Unit ) {
+        val builder: AlertDialog.Builder = AlertDialog.Builder(this, R.style.AlertDialogTheme)
+        builder.setMessage(message)
+        builder.setPositiveButton(getString(R.string.replay)) { _, _ ->
+            replayCallback()
+        }
+        builder.setNegativeButton(getString(R.string.ok), null)
+        val dialog: AlertDialog = builder.create()
+        dialog.show()
+
+        // Change the alert dialog background color
+        dialog.window
+            ?.setBackgroundDrawable(ColorDrawable(Color.BLACK))
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        val inflater: MenuInflater = menuInflater
+        inflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        // Handle item selection
+        return when (item.itemId) {
+            R.id.reset -> {
+                mGameViewModel.initBoardContents()
+                board.removeAllViews()
+                addCells()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     private fun addCells() {
@@ -89,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                 cell.setTextColor(ContextCompat.getColor(this, R.color.number_text))
                 cell.gravity = Gravity.CENTER
                 cell.background = ContextCompat.getDrawable(this, R.drawable.cell_background_not_open)
-                val param = LinearLayout.LayoutParams(0, (getScreenHeight() / (mGameViewModel.getBoardSize()) - 50), 1F)
+                val param = LinearLayout.LayoutParams(0, (board.height / (mGameViewModel.getBoardSize()) - 50), 1F)
                 cell.layoutParams = param
                 cell.tag = Pair(i,j)
                 cell.setOnClickListener {
