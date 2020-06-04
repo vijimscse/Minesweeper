@@ -1,4 +1,4 @@
-<img src="https://github.com/vijimscse/Minesweeper/blob/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" title="Merlin Pilot">
+<img src="https://github.com/vijimscse/Minesweeper/blob/master/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" title="Minesweeper">
 
 ## Minesweeper
 
@@ -13,4 +13,7 @@ Minesweeper is a single-player puzzle video game. The objective of the game is t
  - Android 10 - API Level 29
 
 ### Architecture pattern: M-V-VM
+
+### Screens
+<img src="https://github.com/vijimscse/Minesweeper/blob/master/screenshots/Screenshot.png" width=420 height=780 title="home">
 
